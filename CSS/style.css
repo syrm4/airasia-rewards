@@ -1,0 +1,122 @@
+/* ==========================================
+   1. GLOBAL LAYOUT & TYPOGRAPHY
+   ========================================== */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0; /* Light gray background */
+}
+
+h1 {
+    color: #003366; /* Corporate Navy */
+}
+
+/* ==========================================
+   2. HEADER & LOGO
+   ========================================== */
+header {
+    background-color: #ffffff;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 3px solid #003366;
+}
+
+.logo {
+    max-height: 100px;
+}
+
+/* ==========================================
+   3. MAIN CONTAINER & NAVIGATION
+   ========================================== */
+main {
+    width: 80%;
+    max-width: 800px;
+    margin: 30px auto;
+    background-color: #ffffff;
+    padding: 25px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+}
+
+/* New: Spacing for the Add Customer & Add Card buttons */
+.top-nav {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px; /* Modern spacing between buttons */
+}
+
+/* ==========================================
+   4. FORMS & INPUTS
+   ========================================== */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* ==========================================
+   5. BUTTONS & LINKS
+   ========================================== */
+.button-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #003366;
+    color: #ffffff !important;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+}
+
+.delete-link {
+    color: #cc0000;
+    font-weight: bold;
+    margin-left: 15px;
+    text-decoration: none;
+}
+
+/* ==========================================
+   6. GRID & CARD DISPLAY
+   ========================================== */
+.grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.card {
+    width: 30%;
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 15px;
+    background: #fff;
+    margin-bottom: 20px;
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+}
+
+.details-image {
+    display: block;
+    margin: 0 auto;
+    max-width: 400px;
+}
