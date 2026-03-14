@@ -15,6 +15,30 @@ if (!isset($_SESSION['userId'])) {
     exit();
 }
 
+// FIX CWE-269: Re-verify user role from the database on every request
+// Prevents stale session privileges if a user's role is changed or account is deleted
+require_once 'db-config.php';
+
+$_verifyStmt = $conn->prepare("SELECT role FROM USER WHERE userId = ?");
+$_verifyStmt->bind_param("i", $_SESSION['userId']);
+$_verifyStmt->execute();
+$_verifyRow = $_verifyStmt->get_result()->fetch_assoc();
+
+if (!$_verifyRow) {
+    // User no longer exists in the database - force immediate logout
+    session_unset();
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+
+if ($_verifyRow['role'] !== $_SESSION['role']) {
+    // Role has changed in the database - update session to reflect current state
+    $_SESSION['role'] = $_verifyRow['role'];
+}
+
+unset($_verifyStmt, $_verifyRow);
+
 // Check for Admin role
 function isAdmin() {
     return (isset($_SESSION['role']) && $_SESSION['role'] === 'Admin');
