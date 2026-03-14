@@ -122,7 +122,7 @@ Login
 
 ## Security
 
-This project was assessed against the [OWASP Top 10](https://owasp.org/www-project-top-ten/) and the following controls are implemented:
+This project was assessed against both the [OWASP Top 10](https://owasp.org/www-project-top-ten/) and the [CWE Top 25 Most Dangerous Software Weaknesses](https://cwe.mitre.org/top25/) and the following controls are implemented:
 
 | Control | Implementation |
 |---|---|
@@ -133,19 +133,23 @@ This project was assessed against the [OWASP Top 10](https://owasp.org/www-proje
 | Session fixation prevention | `session_regenerate_id(true)` called immediately after successful login |
 | Secure session cookies | `HttpOnly`, `SameSite=Strict`, and conditional `Secure` flags set via `session_set_cookie_params()` |
 | Role enforcement | Enforced server-side via `isAdmin()` and `restrictToAdmin()` |
+| Role re-verification | User role re-queried from database on every request; stale session privileges cannot persist |
 | CSRF protection | Cryptographic tokens (`bin2hex(random_bytes(32))`) on all forms, validated with `hash_equals()` |
 | Destructive actions via POST | Delete operations use POST forms with CSRF validation, not GET links |
 | Redemption race condition | Redemption logic uses a database transaction with `FOR UPDATE` row lock |
+| Input validation | Allowlist validation on `cardType` and `accountType`; positive/non-negative range checks on `cardValue` and `points` |
 | Error handling | Database errors logged server-side via `error_log()`; only generic messages shown to users |
 | Sensitive file exclusion | `.gitignore` excludes `db-config.php`, `.DS_Store`, logs, and editor files |
 | Audit logging | All security-relevant events written to `AUDIT_LOG` table (logins, logouts, redemptions, admin actions) |
 | Flash messages | Status messages use session-based flash instead of URL query parameters |
 
-> **Note:** This is a class project intended for local development only and is not hardened for production deployment.
+> **Note:** This is a class project intended for local development only and is not hardened for production deployment. Test credentials are intentionally included in `setup.sql` for ease of evaluation.
 
 ## Security Changelog
 
-| Date | Change | OWASP Reference |
+### OWASP Top 10
+
+| Date | Change | Reference |
 |---|---|---|
 | 2026-03-14 | Added CSRF token generation and validation to all state-changing forms | A04, A08 |
 | 2026-03-14 | Converted card deletion from GET to POST with CSRF protection | A04, A08 |
@@ -156,6 +160,15 @@ This project was assessed against the [OWASP Top 10](https://owasp.org/www-proje
 | 2026-03-14 | Added `.gitignore` to exclude credentials, system files, and editor directories | A05 |
 | 2026-03-14 | Added `AUDIT_LOG` table and `logAction()` helper; logging all security-relevant events | A09 |
 | 2026-03-14 | Replaced GET-based `?error=` flash messages with session-based `setFlash()` / `getFlash()` | A01 |
+
+### CWE Top 25
+
+| Date | Change | Reference |
+|---|---|---|
+| 2026-03-14 | Added server-side allowlist validation for `cardType` and `accountType`; replaced free-text inputs with `<select>` dropdowns | CWE-20 |
+| 2026-03-14 | Added range validation for `cardValue` (must be > 0) and `points` (must be ≥ 0) on add and update forms | CWE-20 |
+| 2026-03-14 | Replaced `die($conn->connect_error)` with `error_log()` and a generic 500 response in `db-config.php` | CWE-200 |
+| 2026-03-14 | Added per-request role re-verification against the database in `auth.php`; force-logout if user no longer exists | CWE-269 |
 
 ## License
 
