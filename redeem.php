@@ -30,7 +30,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
         }
 
         if ($account['points'] < $card['points']) {
-            // FIX A09: Log failed redemption before throwing
             logAction($conn, 'REDEEM_FAIL', "cardId=$cardId, required={$card['points']}, available={$account['points']}");
             throw new Exception("Insufficient points for this reward.");
         }
@@ -48,17 +47,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
         $stmt4->bind_param("siii", $date, $pointsRedeemed, $accountId, $cardId);
         $stmt4->execute();
 
-        // FIX A09: Log successful redemption
         logAction($conn, 'REDEEM_SUCCESS', "cardId=$cardId, cardName={$card['cardName']}, points=$pointsRedeemed");
 
         $conn->commit();
 
-        header("Location: card-list.php?error=Success! You redeemed " . urlencode($card['cardName']));
+        // FIX A01: Use session flash for success message
+        setFlash('Success! You redeemed ' . $card['cardName'] . '.', 'success');
+        header("Location: card-list.php");
         exit();
 
     } catch (Exception $e) {
         $conn->rollback();
-        header("Location: card-list.php?error=" . urlencode($e->getMessage()));
+        // FIX A01: Use session flash for error message
+        setFlash($e->getMessage(), 'error');
+        header("Location: card-list.php");
         exit();
     }
 

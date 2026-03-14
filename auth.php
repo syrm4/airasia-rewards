@@ -23,7 +23,9 @@ function isAdmin() {
 // Redirect Customer if they try to access Admin pages
 function restrictToAdmin() {
     if (!isAdmin()) {
-        header("Location: card-list.php?error=Unauthorized Access");
+        // FIX A01: Use session flash instead of GET parameter
+        setFlash('Unauthorized Access.', 'error');
+        header("Location: card-list.php");
         exit();
     }
 }
@@ -64,5 +66,25 @@ function logAction($conn, $action, $detail = null) {
     );
     $stmt->bind_param("sisss", $logTime, $userId, $username, $action, $detail);
     $stmt->execute();
+}
+
+// FIX A01: Session-based flash message helpers
+// Stores a one-time message in the session to be shown after a redirect
+function setFlash($message, $type = 'error') {
+    $_SESSION['flash_message'] = $message;
+    $_SESSION['flash_type']    = $type;
+}
+
+// Reads and immediately clears the flash message so it only shows once
+function getFlash() {
+    if (!empty($_SESSION['flash_message'])) {
+        $flash = [
+            'message' => $_SESSION['flash_message'],
+            'type'    => $_SESSION['flash_type'] ?? 'error',
+        ];
+        unset($_SESSION['flash_message'], $_SESSION['flash_type']);
+        return $flash;
+    }
+    return null;
 }
 ?>

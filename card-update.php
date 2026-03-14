@@ -33,8 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssdii", $name, $type, $value, $points, $id);
 
     if ($stmt->execute()) {
-        // FIX A09: Log successful card update
         logAction($conn, 'CARD_UPDATE', "cardId=$id, cardName=$name");
+        // FIX A01: Use session flash for success message
+        setFlash('Gift card updated successfully.', 'success');
         header("Location: card-list.php");
         exit();
     } else {

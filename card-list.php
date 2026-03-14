@@ -1,5 +1,4 @@
 <?php
-// Ensure user is logged in
 require_once 'auth.php';
 require_once 'db-config.php';
 
@@ -14,8 +13,8 @@ $account = $acc_res->fetch_assoc();
 // Fetch Gift Cards
 $result = $conn->query("SELECT * FROM GIFTCARD");
 
-// FIX: Sanitize the error param to prevent XSS
-$error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : "";
+// FIX A01: Read flash message from session instead of GET parameter
+$flash = getFlash();
 ?>
 
 <!DOCTYPE html>
@@ -37,7 +36,13 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : "";
 
     <main>
         <h1>Gift Card Inventory</h1>
-        <?php if($error != "") echo "<p style='color:red; font-weight:bold;'>$error</p>"; ?>
+
+        <?php if ($flash): ?>
+            <?php $colour = ($flash['type'] === 'success') ? 'green' : 'red'; ?>
+            <p style="color:<?php echo $colour; ?>; font-weight:bold;">
+                <?php echo htmlspecialchars($flash['message']); ?>
+            </p>
+        <?php endif; ?>
 
         <!-- Authorization: Only Admin sees these buttons -->
         <?php if (isAdmin()): ?>

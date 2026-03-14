@@ -11,13 +11,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     $stmt->bind_param("i", $cardId);
 
     if ($stmt->execute()) {
-        // FIX A09: Log successful card deletion
         logAction($conn, 'CARD_DELETE', "cardId=$cardId");
+        // FIX A01: Use session flash for success message
+        setFlash('Gift card deleted successfully.', 'success');
         header("Location: card-list.php");
         exit();
     } else {
         error_log("card-delete.php DB error: " . $conn->error);
-        header("Location: card-list.php?error=An unexpected error occurred. Please try again.");
+        // FIX A01: Use session flash for error message
+        setFlash('An unexpected error occurred. Please try again.', 'error');
+        header("Location: card-list.php");
         exit();
     }
 } else {
