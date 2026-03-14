@@ -32,7 +32,7 @@ airasia-rewards/
 ├── images/
 │   ├── logo.png
 │   └── giftcard.png
-├── auth.php          # Session gating, role functions, and CSRF helpers
+├── auth.php          # Session gating, role functions, CSRF, flash, and audit helpers
 ├── card-add.php      # Add a new gift card (Admin only)
 ├── card-delete.php   # Delete a gift card (Admin only)
 ├── card-details.php  # View details of one gift card
@@ -52,6 +52,7 @@ airasia-rewards/
 - **ACCOUNT** — Stores point balances linked to each user
 - **GIFTCARD** — Stores the gift card catalog (20 cards)
 - **REDEMPTION** — Logs each redemption with date, points redeemed, and card details
+- **AUDIT_LOG** — Records all security-relevant events for monitoring and incident response
 
 ## Setup Instructions
 
@@ -129,10 +130,16 @@ This project was assessed against the [OWASP Top 10](https://owasp.org/www-proje
 | SQL injection prevention | MySQLi prepared statements with `bind_param()` on all queries |
 | XSS prevention | `htmlspecialchars()` applied to all user-controlled output |
 | Session authentication | Every page requires an active session via `auth.php` |
+| Session fixation prevention | `session_regenerate_id(true)` called immediately after successful login |
+| Secure session cookies | `HttpOnly`, `SameSite=Strict`, and conditional `Secure` flags set via `session_set_cookie_params()` |
 | Role enforcement | Enforced server-side via `isAdmin()` and `restrictToAdmin()` |
 | CSRF protection | Cryptographic tokens (`bin2hex(random_bytes(32))`) on all forms, validated with `hash_equals()` |
 | Destructive actions via POST | Delete operations use POST forms with CSRF validation, not GET links |
 | Redemption race condition | Redemption logic uses a database transaction with `FOR UPDATE` row lock |
+| Error handling | Database errors logged server-side via `error_log()`; only generic messages shown to users |
+| Sensitive file exclusion | `.gitignore` excludes `db-config.php`, `.DS_Store`, logs, and editor files |
+| Audit logging | All security-relevant events written to `AUDIT_LOG` table (logins, logouts, redemptions, admin actions) |
+| Flash messages | Status messages use session-based flash instead of URL query parameters |
 
 > **Note:** This is a class project intended for local development only and is not hardened for production deployment.
 
@@ -143,6 +150,12 @@ This project was assessed against the [OWASP Top 10](https://owasp.org/www-proje
 | 2026-03-14 | Added CSRF token generation and validation to all state-changing forms | A04, A08 |
 | 2026-03-14 | Converted card deletion from GET to POST with CSRF protection | A04, A08 |
 | 2026-03-14 | Wrapped redemption logic in a database transaction with `FOR UPDATE` row lock | A04 |
+| 2026-03-14 | Added `session_regenerate_id(true)` on successful login to prevent session fixation | A07 |
+| 2026-03-14 | Added `HttpOnly`, `SameSite=Strict`, and conditional `Secure` session cookie flags | A07 |
+| 2026-03-14 | Replaced raw `$conn->error` output with `error_log()` and generic user-facing messages | A05 |
+| 2026-03-14 | Added `.gitignore` to exclude credentials, system files, and editor directories | A05 |
+| 2026-03-14 | Added `AUDIT_LOG` table and `logAction()` helper; logging all security-relevant events | A09 |
+| 2026-03-14 | Replaced GET-based `?error=` flash messages with session-based `setFlash()` / `getFlash()` | A01 |
 
 ## Author
 syrm4
