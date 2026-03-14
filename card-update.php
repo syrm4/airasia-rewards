@@ -1,4 +1,15 @@
 <?php
+/**
+ * card-update.php
+ *
+ * Admin-only page for updating an existing gift card's details.
+ * Fetches the card by ID from the URL parameter, pre-fills the form,
+ * and validates all inputs before applying the update.
+ * Restricted to Admin role via restrictToAdmin().
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php and $allowedCardTypes included internally
 restrictToAdmin();
 

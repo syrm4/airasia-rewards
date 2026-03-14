@@ -1,4 +1,14 @@
 <?php
+/**
+ * card-details.php
+ *
+ * Displays the full details of a single gift card identified by ?id= in the URL.
+ * Admins see buttons to update or delete the card.
+ * Customers see a CSRF-protected redemption form.
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php included internally by auth.php
 
 if (isset($_GET['id'])) {

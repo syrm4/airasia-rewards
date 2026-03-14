@@ -1,4 +1,16 @@
 <?php
+/**
+ * redeem.php
+ *
+ * Handles gift card redemption for authenticated customers.
+ * Runs inside a database transaction with a FOR UPDATE row lock to prevent
+ * race conditions on the points balance. Validates sufficient points,
+ * deducts the balance, logs the redemption, and records it in the
+ * REDEMPTION table. Both success and failure outcomes are audit logged.
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php included internally by auth.php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
@@ -10,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     $conn->begin_transaction();
 
     try {
+        // Lock the account row to prevent race conditions on the points balance
         $stmt = $conn->prepare("SELECT accountId, points FROM ACCOUNT WHERE userId = ? FOR UPDATE");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -33,11 +46,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
             throw new Exception("Insufficient points for this reward.");
         }
 
+        // Deduct points from the account balance
         $new_balance = $account['points'] - $card['points'];
         $stmt3 = $conn->prepare("UPDATE ACCOUNT SET points = ? WHERE accountId = ?");
         $stmt3->bind_param("ii", $new_balance, $account['accountId']);
         $stmt3->execute();
 
+        // Record the redemption
         $date           = date('Y-m-d H:i:s');
         $pointsRedeemed = $card['points'];
         $accountId      = $account['accountId'];

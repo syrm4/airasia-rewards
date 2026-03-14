@@ -1,5 +1,17 @@
 <?php
-// FIX A07: Set secure session cookie flags before session_start()
+/**
+ * login.php
+ *
+ * Public login page. Handles CSRF-protected credential validation,
+ * session initialisation on successful login, session fixation prevention,
+ * and audit logging of both successful and failed login attempts.
+ * This file does not include auth.php as it must be accessible
+ * to unauthenticated users.
+ *
+ * @author syrm4
+ */
+
+// Set secure session cookie flags before session_start()
 session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Strict',
@@ -14,8 +26,18 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// FIX A09: Inline audit log helper for login events (auth.php not available pre-login)
-function logLoginEvent($conn, $action, $username, $userId = null) {
+/**
+ * Writes a login event to the AUDIT_LOG table.
+ * Defined inline here because auth.php (which contains logAction()) cannot
+ * be included on the login page - it would redirect unauthenticated users.
+ *
+ * @param mysqli   $conn     Active database connection.
+ * @param string   $action   Event type: 'LOGIN_SUCCESS' or 'LOGIN_FAIL'.
+ * @param string   $username The username that was submitted in the login form.
+ * @param int|null $userId   The authenticated user's ID, or null on failed attempts.
+ * @return void
+ */
+function logLoginEvent(mysqli $conn, string $action, string $username, ?int $userId = null): void {
     $logTime = date('Y-m-d H:i:s');
     $stmt = $conn->prepare(
         "INSERT INTO AUDIT_LOG (logTime, userId, username, action, detail) VALUES (?, ?, ?, ?, NULL)"
@@ -46,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $row = $result->fetch_assoc();
         if (password_verify($pass, $row['password'])) {
 
-            // FIX A07: Regenerate session ID on login to prevent session fixation
+            // Regenerate session ID on login to prevent session fixation
             session_regenerate_id(true);
 
             $_SESSION['userId']    = $row['userId'];
@@ -54,18 +76,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role']      = $row['role'];
             $_SESSION['firstName'] = $row['firstName'];
 
-            // FIX A09: Log successful login
+            // Log successful login
             logLoginEvent($conn, 'LOGIN_SUCCESS', $row['userName'], $row['userId']);
 
             header("Location: card-list.php");
             exit();
         } else {
-            // FIX A09: Log failed login (wrong password - user exists)
+            // Log failed login (wrong password - user exists)
             logLoginEvent($conn, 'LOGIN_FAIL', $user);
             $error = "Invalid username or password.";
         }
     } else {
-        // FIX A09: Log failed login (username not found)
+        // Log failed login (username not found)
         logLoginEvent($conn, 'LOGIN_FAIL', $user);
         $error = "Invalid username or password.";
     }

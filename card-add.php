@@ -1,4 +1,15 @@
 <?php
+/**
+ * card-add.php
+ *
+ * Admin-only page for adding a new gift card to the inventory.
+ * Validates all inputs server-side against the allowlist and range rules
+ * defined in auth.php before inserting to the database.
+ * Restricted to Admin role via restrictToAdmin().
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php and $allowedCardTypes included internally
 restrictToAdmin();
 

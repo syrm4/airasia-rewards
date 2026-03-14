@@ -1,4 +1,15 @@
 <?php
+/**
+ * card-list.php
+ *
+ * Gift card inventory page. Displays all available gift cards as a grid.
+ * Admins see buttons to add new gift cards and enroll new customers.
+ * Customers see their available points balance.
+ * Flash messages from previous operations are displayed here.
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php included internally by auth.php
 
 // Fetch User's Points

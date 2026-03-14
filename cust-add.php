@@ -1,4 +1,15 @@
 <?php
+/**
+ * cust-add.php
+ *
+ * Admin-only page for enrolling a new customer account.
+ * Creates a USER record with a bcrypt-hashed password and a linked
+ * ACCOUNT record with the selected account type and starting points balance.
+ * Restricted to Admin role via restrictToAdmin().
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php included internally by auth.php
 restrictToAdmin();
 

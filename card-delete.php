@@ -1,4 +1,15 @@
 <?php
+/**
+ * card-delete.php
+ *
+ * Admin-only endpoint for deleting a gift card from the inventory.
+ * Accepts POST requests only (with CSRF validation) to prevent
+ * accidental or cross-site deletion via GET links.
+ * Restricted to Admin role via restrictToAdmin().
+ *
+ * @author syrm4
+ */
+
 require_once 'auth.php'; // db-config.php included internally by auth.php
 restrictToAdmin();
 
