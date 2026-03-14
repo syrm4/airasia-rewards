@@ -1,4 +1,12 @@
 <?php
+// FIX A07: Set secure session cookie flags before session_start()
+session_set_cookie_params([
+    'httponly' => true,                                          // Block JS access to session cookie
+    'samesite' => 'Strict',                                      // Block cookie on cross-site requests
+    'secure'   => isset($_SERVER['HTTPS']) &&                    // Only send over HTTPS -
+                  $_SERVER['HTTPS'] === 'on',                    // disabled automatically on HTTP localhost
+]);
+
 session_start();
 require_once 'db-config.php';
 
@@ -28,6 +36,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         if (password_verify($pass, $row['password'])) {
+
+            // FIX A07: Regenerate session ID on login to prevent session fixation
+            session_regenerate_id(true);
+
             $_SESSION['userId']    = $row['userId'];
             $_SESSION['userName']  = $row['userName'];
             $_SESSION['role']      = $row['role'];

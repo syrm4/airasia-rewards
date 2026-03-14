@@ -1,4 +1,12 @@
 <?php
+// FIX A07: Set secure session cookie flags before session_start()
+session_set_cookie_params([
+    'httponly' => true,                                          // Block JS access to session cookie
+    'samesite' => 'Strict',                                      // Block cookie on cross-site requests
+    'secure'   => isset($_SERVER['HTTPS']) &&                    // Only send over HTTPS -
+                  $_SERVER['HTTPS'] === 'on',                    // disabled automatically on HTTP localhost
+]);
+
 session_start();
 
 // Users cannot access pages unless logged in
