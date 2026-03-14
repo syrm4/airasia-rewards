@@ -6,11 +6,10 @@ $uId = (int)$_SESSION['userId'];
 $stmt = $conn->prepare("SELECT points FROM ACCOUNT WHERE userId = ?");
 $stmt->bind_param("i", $uId);
 $stmt->execute();
-$acc_res = $stmt->get_result();
-$account = $acc_res->fetch_assoc();
+$account = $stmt->get_result()->fetch_assoc();
 
-// Fetch Gift Cards
-$result = $conn->query("SELECT * FROM GIFTCARD");
+// Explicit column names instead of SELECT *
+$result = $conn->query("SELECT cardId, cardName, cardType, cardValue, points FROM GIFTCARD");
 
 $flash = getFlash();
 ?>

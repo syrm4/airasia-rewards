@@ -10,7 +10,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $value  = (float)$_POST['cardValue'];
     $points = (int)$_POST['points'];
 
-    $inputError = validateCardInput($name, $type, $value, $points);
+    // Pass $allowedCardTypes as argument (avoids global variable usage)
+    $inputError = validateCardInput($name, $type, $value, $points, $allowedCardTypes);
 
     if (!$inputError) {
         $stmt = $conn->prepare("INSERT INTO GIFTCARD (cardName, cardType, cardValue, points) VALUES (?, ?, ?, ?)");

@@ -40,12 +40,12 @@ if ($_verifyRow['role'] !== $_SESSION['role']) {
 unset($_verifyStmt, $_verifyRow);
 
 // Check for Admin role
-function isAdmin() {
+function isAdmin(): bool {
     return (isset($_SESSION['role']) && $_SESSION['role'] === 'Admin');
 }
 
 // Redirect Customer if they try to access Admin pages
-function restrictToAdmin() {
+function restrictToAdmin(): void {
     if (!isAdmin()) {
         setFlash('Unauthorized Access.', 'error');
         header("Location: card-list.php");
@@ -54,7 +54,7 @@ function restrictToAdmin() {
 }
 
 // Generate a CSRF token (once per session)
-function generateCsrfToken() {
+function generateCsrfToken(): string {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
@@ -62,13 +62,13 @@ function generateCsrfToken() {
 }
 
 // Validate submitted CSRF token against session token
-function validateCsrfToken($token) {
+function validateCsrfToken(string $token): bool {
     return isset($_SESSION['csrf_token'], $token)
         && hash_equals($_SESSION['csrf_token'], $token);
 }
 
 // Call this at the top of any POST handler
-function requireCsrf() {
+function requireCsrf(): void {
     $token = $_POST['csrf_token'] ?? '';
     if (!validateCsrfToken($token)) {
         http_response_code(403);
@@ -77,7 +77,7 @@ function requireCsrf() {
 }
 
 // FIX A09: Audit logging helper
-function logAction($conn, $action, $detail = null) {
+function logAction(mysqli $conn, string $action, ?string $detail = null): void {
     $userId   = $_SESSION['userId']   ?? null;
     $username = $_SESSION['userName'] ?? null;
     $logTime  = date('Y-m-d H:i:s');
@@ -89,12 +89,12 @@ function logAction($conn, $action, $detail = null) {
 }
 
 // FIX A01: Session-based flash message helpers
-function setFlash($message, $type = 'error') {
+function setFlash(string $message, string $type = 'error'): void {
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_type']    = $type;
 }
 
-function getFlash() {
+function getFlash(): ?array {
     if (!empty($_SESSION['flash_message'])) {
         $flash = [
             'message' => $_SESSION['flash_message'],
@@ -106,15 +106,15 @@ function getFlash() {
     return null;
 }
 
-// Centralised allowlist for gift card types (Redundancy 3)
+// Centralised allowlist for gift card types
 // Used by card-add.php and card-update.php for validation and dropdown rendering
 $allowedCardTypes = ['Travel', 'Service', 'Food', 'Shopping', 'Lifestyle'];
 
-// Centralised gift card input validation (Redundancy 4)
+// Centralised gift card input validation
+// $allowedTypes passed as parameter (avoids global variable usage)
 // Returns an error string if validation fails, or null if all inputs are valid
-function validateCardInput($name, $type, $value, $points) {
-    global $allowedCardTypes;
-    if (!in_array($type, $allowedCardTypes, true)) {
+function validateCardInput(string $name, string $type, float $value, int $points, array $allowedTypes): ?string {
+    if (!in_array($type, $allowedTypes, true)) {
         return "Invalid card type selected.";
     }
     if ($value <= 0) {
@@ -129,9 +129,8 @@ function validateCardInput($name, $type, $value, $points) {
     return null;
 }
 
-// Centralised inline error display helper (Redundancy 5)
-// Outputs validation and DB error messages for admin forms
-function renderFormErrors($inputError = null, $dbError = null) {
+// Centralised inline error display helper
+function renderFormErrors(?string $inputError = null, ?string $dbError = null): void {
     if (!empty($inputError)) {
         echo "<p style='color:red; font-weight:bold;'>" . htmlspecialchars($inputError) . "</p>";
     }
@@ -139,4 +138,4 @@ function renderFormErrors($inputError = null, $dbError = null) {
         echo "<p style='color:red; font-weight:bold;'>" . htmlspecialchars($dbError) . "</p>";
     }
 }
-?>
+// PSR-12: Closing ?> tag omitted in pure PHP files to prevent accidental whitespace output

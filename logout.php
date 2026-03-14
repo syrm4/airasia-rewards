@@ -1,14 +1,7 @@
 <?php
-// FIX A07: Match session cookie config from auth.php
-// Must be set before session_start() which is called below
-session_set_cookie_params([
-    'httponly' => true,
-    'samesite' => 'Strict',
-    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-]);
-
-session_start();
-require_once 'auth.php'; // db-config.php is included internally by auth.php
+// session_set_cookie_params() and session_start() are both handled by auth.php
+// Redundant calls removed - auth.php is the single source of truth for session setup
+require_once 'auth.php';
 
 // FIX A09: Capture identity before session is destroyed
 logAction($conn, 'LOGOUT');
@@ -19,4 +12,3 @@ session_destroy();
 
 header("Location: login.php");
 exit();
-?>

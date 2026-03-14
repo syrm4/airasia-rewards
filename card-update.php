@@ -4,11 +4,11 @@ restrictToAdmin();
 
 if (isset($_GET['id'])) {
     $cardId = (int)$_GET['id'];
-    $stmt = $conn->prepare("SELECT * FROM GIFTCARD WHERE cardId = ?");
+    // Explicit column names instead of SELECT *
+    $stmt = $conn->prepare("SELECT cardId, cardName, cardType, cardValue, points FROM GIFTCARD WHERE cardId = ?");
     $stmt->bind_param("i", $cardId);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $card = $result->fetch_assoc();
+    $card = $stmt->get_result()->fetch_assoc();
 
     if (!$card) {
         header("Location: card-list.php");
@@ -28,7 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $value  = (float)$_POST['cardValue'];
     $points = (int)$_POST['points'];
 
-    $inputError = validateCardInput($name, $type, $value, $points);
+    // Pass $allowedCardTypes as argument (avoids global variable usage)
+    $inputError = validateCardInput($name, $type, $value, $points, $allowedCardTypes);
 
     if (!$inputError) {
         $stmt = $conn->prepare("UPDATE GIFTCARD SET cardName=?, cardType=?, cardValue=?, points=? WHERE cardId=?");

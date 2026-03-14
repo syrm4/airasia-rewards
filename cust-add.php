@@ -7,33 +7,34 @@ $allowedAccountTypes = ['Corporate', 'Gold', 'Silver'];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     requireCsrf();
 
-    $un   = trim($_POST['userName']);
-    $pw   = $_POST['password'];
-    $fn   = trim($_POST['firstName']);
-    $ln   = trim($_POST['lastName']);
-    $type = trim($_POST['accountType']);
-    $pts  = (int)$_POST['points'];
+    // Descriptive variable names (clean code)
+    $username  = trim($_POST['userName']);
+    $password  = $_POST['password'];
+    $firstName = trim($_POST['firstName']);
+    $lastName  = trim($_POST['lastName']);
+    $type      = trim($_POST['accountType']);
+    $points    = (int)$_POST['points'];
 
     if (!in_array($type, $allowedAccountTypes, true)) {
         $inputError = "Invalid account type selected.";
-    } elseif ($pts < 0) {
+    } elseif ($points < 0) {
         $inputError = "Starting points cannot be negative.";
-    } elseif (empty($un) || empty($fn) || empty($ln)) {
+    } elseif (empty($username) || empty($firstName) || empty($lastName)) {
         $inputError = "First name, last name, and username are all required.";
     } else {
-        $hashedPw = password_hash($pw, PASSWORD_DEFAULT);
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $stmt = $conn->prepare("INSERT INTO USER (userName, password, firstName, lastName, role) VALUES (?, ?, ?, ?, 'Customer')");
-        $stmt->bind_param("ssss", $un, $hashedPw, $fn, $ln);
+        $stmt->bind_param("ssss", $username, $hashedPassword, $firstName, $lastName);
 
         if ($stmt->execute()) {
-            $last_id = $conn->insert_id;
+            $lastInsertId = $conn->insert_id;
 
-            $acc_stmt = $conn->prepare("INSERT INTO ACCOUNT (userId, accountType, points) VALUES (?, ?, ?)");
-            $acc_stmt->bind_param("isi", $last_id, $type, $pts);
+            $accStmt = $conn->prepare("INSERT INTO ACCOUNT (userId, accountType, points) VALUES (?, ?, ?)");
+            $accStmt->bind_param("isi", $lastInsertId, $type, $points);
 
-            if ($acc_stmt->execute()) {
-                logAction($conn, 'CUSTOMER_ADD', "newUsername=$un, accountType=$type");
+            if ($accStmt->execute()) {
+                logAction($conn, 'CUSTOMER_ADD', "newUsername=$username, accountType=$type");
                 setFlash('Customer enrolled successfully.', 'success');
                 header("Location: card-list.php");
                 exit();
