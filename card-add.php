@@ -15,10 +15,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssdi", $name, $type, $value, $points);
 
     if ($stmt->execute()) {
+        // FIX A09: Log successful card addition
+        logAction($conn, 'CARD_ADD', "cardName=$name, points=$points");
         header("Location: card-list.php");
         exit();
     } else {
-        // FIX A05: Log real error server-side; show generic message to user
         error_log("card-add.php DB error: " . $conn->error);
         $dbError = "An unexpected error occurred. Please try again.";
     }

@@ -1,14 +1,22 @@
 <?php
-// Start the session to gain access to it
+// FIX A07: Match session cookie config from auth.php
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Strict',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+]);
+
 session_start();
+require_once 'db-config.php';
+require_once 'auth.php';
 
-// Objective: Log the user out of the system by clearing all session variables
+// FIX A09: Capture identity before session is destroyed
+logAction($conn, 'LOGOUT');
+
+// Clear all session variables and destroy the session
 session_unset();
-
-// Destroy the actual session file on the server
 session_destroy();
 
-// Redirect the user back to the login page
 header("Location: login.php");
 exit();
 ?>

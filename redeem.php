@@ -8,12 +8,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     $cardId = (int)$_POST['cardId'];
     $userId = (int)$_SESSION['userId'];
 
-    // Begin transaction to prevent race conditions
     $conn->begin_transaction();
 
     try {
-        // Lock the user's account row for the duration of this transaction
-        // FOR UPDATE prevents concurrent requests from reading the same balance simultaneously
         $stmt = $conn->prepare("SELECT accountId, points FROM ACCOUNT WHERE userId = ? FOR UPDATE");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -23,7 +20,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
             throw new Exception("Account not found.");
         }
 
-        // Fetch card details
         $stmt2 = $conn->prepare("SELECT points, cardName FROM GIFTCARD WHERE cardId = ?");
         $stmt2->bind_param("i", $cardId);
         $stmt2->execute();
@@ -33,18 +29,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
             throw new Exception("Gift card not found.");
         }
 
-        // Check sufficient points
         if ($account['points'] < $card['points']) {
+            // FIX A09: Log failed redemption before throwing
+            logAction($conn, 'REDEEM_FAIL', "cardId=$cardId, required={$card['points']}, available={$account['points']}");
             throw new Exception("Insufficient points for this reward.");
         }
 
-        // Deduct points
         $new_balance = $account['points'] - $card['points'];
         $stmt3 = $conn->prepare("UPDATE ACCOUNT SET points = ? WHERE accountId = ?");
         $stmt3->bind_param("ii", $new_balance, $account['accountId']);
         $stmt3->execute();
 
-        // Log redemption
         $date           = date('Y-m-d H:i:s');
         $pointsRedeemed = $card['points'];
         $accountId      = $account['accountId'];
@@ -53,14 +48,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
         $stmt4->bind_param("siii", $date, $pointsRedeemed, $accountId, $cardId);
         $stmt4->execute();
 
-        // All good - commit
+        // FIX A09: Log successful redemption
+        logAction($conn, 'REDEEM_SUCCESS', "cardId=$cardId, cardName={$card['cardName']}, points=$pointsRedeemed");
+
         $conn->commit();
 
         header("Location: card-list.php?error=Success! You redeemed " . urlencode($card['cardName']));
         exit();
 
     } catch (Exception $e) {
-        // Something failed - roll back everything
         $conn->rollback();
         header("Location: card-list.php?error=" . urlencode($e->getMessage()));
         exit();

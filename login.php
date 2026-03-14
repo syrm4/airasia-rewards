@@ -1,10 +1,9 @@
 <?php
 // FIX A07: Set secure session cookie flags before session_start()
 session_set_cookie_params([
-    'httponly' => true,                                          // Block JS access to session cookie
-    'samesite' => 'Strict',                                      // Block cookie on cross-site requests
-    'secure'   => isset($_SERVER['HTTPS']) &&                    // Only send over HTTPS -
-                  $_SERVER['HTTPS'] === 'on',                    // disabled automatically on HTTP localhost
+    'httponly' => true,
+    'samesite' => 'Strict',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
 ]);
 
 session_start();
@@ -13,6 +12,16 @@ require_once 'db-config.php';
 // Generate CSRF token for the login form
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// FIX A09: Inline audit log helper for login events (auth.php not available pre-login)
+function logLoginEvent($conn, $action, $username, $userId = null) {
+    $logTime = date('Y-m-d H:i:s');
+    $stmt = $conn->prepare(
+        "INSERT INTO AUDIT_LOG (logTime, userId, username, action, detail) VALUES (?, ?, ?, ?, NULL)"
+    );
+    $stmt->bind_param("sisss", $logTime, $userId, $username, $action);
+    $stmt->execute();
 }
 
 $error = "";
@@ -44,12 +53,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['userName']  = $row['userName'];
             $_SESSION['role']      = $row['role'];
             $_SESSION['firstName'] = $row['firstName'];
+
+            // FIX A09: Log successful login
+            logLoginEvent($conn, 'LOGIN_SUCCESS', $row['userName'], $row['userId']);
+
             header("Location: card-list.php");
             exit();
         } else {
+            // FIX A09: Log failed login (wrong password - user exists)
+            logLoginEvent($conn, 'LOGIN_FAIL', $user);
             $error = "Invalid username or password.";
         }
     } else {
+        // FIX A09: Log failed login (username not found)
+        logLoginEvent($conn, 'LOGIN_FAIL', $user);
         $error = "Invalid username or password.";
     }
 }

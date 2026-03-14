@@ -33,10 +33,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssdii", $name, $type, $value, $points, $id);
 
     if ($stmt->execute()) {
+        // FIX A09: Log successful card update
+        logAction($conn, 'CARD_UPDATE', "cardId=$id, cardName=$name");
         header("Location: card-list.php");
         exit();
     } else {
-        // FIX A05: Log real error server-side; show generic message to user
         error_log("card-update.php DB error: " . $conn->error);
         $dbError = "An unexpected error occurred. Please try again.";
     }

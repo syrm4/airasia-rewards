@@ -50,4 +50,19 @@ function requireCsrf() {
         die("Invalid or missing CSRF token. Please go back and try again.");
     }
 }
+
+// FIX A09: Audit logging helper - call after db-config.php has been included
+// $conn   : active MySQLi connection
+// $action : event name e.g. LOGIN_SUCCESS, CARD_DELETE
+// $detail : optional context e.g. "cardId=5"
+function logAction($conn, $action, $detail = null) {
+    $userId   = $_SESSION['userId']   ?? null;
+    $username = $_SESSION['userName'] ?? null;
+    $logTime  = date('Y-m-d H:i:s');
+    $stmt = $conn->prepare(
+        "INSERT INTO AUDIT_LOG (logTime, userId, username, action, detail) VALUES (?, ?, ?, ?, ?)"
+    );
+    $stmt->bind_param("sisss", $logTime, $userId, $username, $action, $detail);
+    $stmt->execute();
+}
 ?>

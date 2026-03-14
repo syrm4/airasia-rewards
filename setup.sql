@@ -42,6 +42,16 @@ CREATE TABLE REDEMPTION (
     FOREIGN KEY (cardId)    REFERENCES GIFTCARD(cardId)   ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- FIX A09: Audit log table for security-relevant events
+CREATE TABLE AUDIT_LOG (
+    logId     INT AUTO_INCREMENT PRIMARY KEY,
+    logTime   DATETIME NOT NULL,
+    userId    INT DEFAULT NULL,           -- NULL for failed logins (user not yet authenticated)
+    username  VARCHAR(100) DEFAULT NULL,  -- Captures attempted username on failed logins
+    action    VARCHAR(100) NOT NULL,      -- e.g. LOGIN_SUCCESS, LOGIN_FAIL, CARD_DELETE
+    detail    VARCHAR(255) DEFAULT NULL   -- e.g. "cardId=5", "Insufficient points"
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- bsmith    / mysecret  (Admin)
 -- pjones    / acrobat   (Customer)
 -- asmith    / pass123   (Customer)

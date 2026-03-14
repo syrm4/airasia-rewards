@@ -11,10 +11,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     $stmt->bind_param("i", $cardId);
 
     if ($stmt->execute()) {
+        // FIX A09: Log successful card deletion
+        logAction($conn, 'CARD_DELETE', "cardId=$cardId");
         header("Location: card-list.php");
         exit();
     } else {
-        // FIX A05: Log real error server-side; redirect with generic message
         error_log("card-delete.php DB error: " . $conn->error);
         header("Location: card-list.php?error=An unexpected error occurred. Please try again.");
         exit();

@@ -23,15 +23,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $acc_stmt->bind_param("isi", $last_id, $type, $pts);
 
         if ($acc_stmt->execute()) {
+            // FIX A09: Log successful customer enrolment
+            logAction($conn, 'CUSTOMER_ADD', "newUsername=$un, accountType=$type");
             header("Location: card-list.php");
             exit();
         } else {
-            // FIX A05: Log real error server-side; show generic message to user
             error_log("cust-add.php ACCOUNT insert error: " . $conn->error);
             $dbError = "An unexpected error occurred. Please try again.";
         }
     } else {
-        // FIX A05: Log real error server-side; show generic message to user
         error_log("cust-add.php USER insert error: " . $conn->error);
         $dbError = "An unexpected error occurred. Please try again.";
     }
