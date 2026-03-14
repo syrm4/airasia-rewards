@@ -25,9 +25,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($acc_stmt->execute()) {
             header("Location: card-list.php");
             exit();
+        } else {
+            // FIX A05: Log real error server-side; show generic message to user
+            error_log("cust-add.php ACCOUNT insert error: " . $conn->error);
+            $dbError = "An unexpected error occurred. Please try again.";
         }
     } else {
-        echo "<p style='color:red;'>Error: " . htmlspecialchars($conn->error) . "</p>";
+        // FIX A05: Log real error server-side; show generic message to user
+        error_log("cust-add.php USER insert error: " . $conn->error);
+        $dbError = "An unexpected error occurred. Please try again.";
     }
 }
 ?>
@@ -43,6 +49,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <main>
         <h1>Enroll New Customer</h1>
         <p>Logged in as: <?php echo htmlspecialchars($_SESSION['userName']); ?> (Admin)</p>
+
+        <?php if (!empty($dbError)): ?>
+            <p style="color:red; font-weight:bold;"><?php echo htmlspecialchars($dbError); ?></p>
+        <?php endif; ?>
 
         <form action="cust-add.php" method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">

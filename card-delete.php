@@ -3,7 +3,6 @@ require_once 'auth.php';
 restrictToAdmin();
 require_once 'db-config.php';
 
-// FIX: Now accepts POST only, with CSRF validation
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     requireCsrf();
 
@@ -15,7 +14,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
         header("Location: card-list.php");
         exit();
     } else {
-        echo "Error deleting record: " . htmlspecialchars($conn->error);
+        // FIX A05: Log real error server-side; redirect with generic message
+        error_log("card-delete.php DB error: " . $conn->error);
+        header("Location: card-list.php?error=An unexpected error occurred. Please try again.");
+        exit();
     }
 } else {
     header("Location: card-list.php");

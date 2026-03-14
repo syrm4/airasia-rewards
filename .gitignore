@@ -1,0 +1,22 @@
+# Database configuration - never commit credentials
+db-config.php
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverrideDirectory
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# PHP environment files
+.env
+*.log
+
+# Editor/IDE directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
