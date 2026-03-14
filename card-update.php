@@ -1,13 +1,9 @@
 <?php
-// Authorization: Ensure user is logged in AND is an Admin
 require_once 'auth.php';
 restrictToAdmin();
-
 require_once 'db-config.php';
 
-// GET EXISTING DATA: Pull the card details for the form
 if (isset($_GET['id'])) {
-    // FIX: Use prepared statement to prevent SQL injection
     $cardId = (int)$_GET['id'];
     $stmt = $conn->prepare("SELECT * FROM GIFTCARD WHERE cardId = ?");
     $stmt->bind_param("i", $cardId);
@@ -24,15 +20,15 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-// PROCESS UPDATE: When the user clicks "Update Card"
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    requireCsrf();
+
     $id     = (int)$_POST['cardId'];
     $name   = trim($_POST['cardName']);
     $type   = trim($_POST['cardType']);
     $value  = trim($_POST['cardValue']);
     $points = trim($_POST['points']);
 
-    // FIX: Use prepared statement to prevent SQL injection
     $stmt = $conn->prepare("UPDATE GIFTCARD SET cardName=?, cardType=?, cardValue=?, points=? WHERE cardId=?");
     $stmt->bind_param("ssdii", $name, $type, $value, $points, $id);
 
@@ -40,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: card-list.php");
         exit();
     } else {
-        echo "Error updating record: " . $conn->error;
+        echo "Error updating record: " . htmlspecialchars($conn->error);
     }
 }
 ?>
@@ -61,6 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h1>Update Gift Card Details</h1>
 
         <form action="card-update.php?id=<?php echo $card['cardId']; ?>" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
             <input type="hidden" name="cardId" value="<?php echo $card['cardId']; ?>">
 
             <div class="form-group">
@@ -84,7 +81,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <button type="submit" class="button-link">Update Card</button>
-
             <p><a href="card-details.php?id=<?php echo $card['cardId']; ?>">Cancel and Go Back</a></p>
         </form>
     </main>

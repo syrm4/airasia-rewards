@@ -1,17 +1,16 @@
 <?php
-// Authorization: Ensure user is logged in AND is an Admin
 require_once 'auth.php';
 restrictToAdmin();
-
 require_once 'db-config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    requireCsrf();
+
     $name   = trim($_POST['cardName']);
     $type   = trim($_POST['cardType']);
     $value  = trim($_POST['cardValue']);
     $points = trim($_POST['points']);
 
-    // FIX: Use prepared statement to prevent SQL injection
     $stmt = $conn->prepare("INSERT INTO GIFTCARD (cardName, cardType, cardValue, points) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssdi", $name, $type, $value, $points);
 
@@ -19,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: card-list.php");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        echo "Error: " . htmlspecialchars($conn->error);
     }
 }
 ?>
@@ -40,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h1>Add New Gift Card</h1>
 
         <form action="card-add.php" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
 
             <div class="form-group">
                 <label>Card Name:</label>
@@ -62,7 +62,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <button type="submit" class="button-link">Save Gift Card</button>
-
             <p><a href="card-list.php">Cancel and Go Back</a></p>
         </form>
     </main>

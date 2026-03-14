@@ -1,11 +1,11 @@
 <?php
-// Authorization: Only Admins can access this page
 require_once 'auth.php';
 restrictToAdmin();
-
 require_once 'db-config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    requireCsrf();
+
     $un   = trim($_POST['userName']);
     $pw   = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $fn   = trim($_POST['firstName']);
@@ -13,14 +13,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $type = trim($_POST['accountType']);
     $pts  = (int)$_POST['points'];
 
-    // FIX: Use prepared statement to prevent SQL injection
     $stmt = $conn->prepare("INSERT INTO USER (userName, password, firstName, lastName, role) VALUES (?, ?, ?, ?, 'Customer')");
     $stmt->bind_param("ssss", $un, $pw, $fn, $ln);
 
     if ($stmt->execute()) {
         $last_id = $conn->insert_id;
 
-        // FIX: Use prepared statement for ACCOUNT insert too
         $acc_stmt = $conn->prepare("INSERT INTO ACCOUNT (userId, accountType, points) VALUES (?, ?, ?)");
         $acc_stmt->bind_param("isi", $last_id, $type, $pts);
 
@@ -47,6 +45,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <p>Logged in as: <?php echo htmlspecialchars($_SESSION['userName']); ?> (Admin)</p>
 
         <form action="cust-add.php" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
+
             <div class="form-group"><label>First Name:</label><input type="text" name="firstName" required></div>
             <div class="form-group"><label>Last Name:</label><input type="text" name="lastName" required></div>
             <div class="form-group"><label>Username:</label><input type="text" name="userName" required></div>

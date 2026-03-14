@@ -2,13 +2,24 @@
 session_start();
 require_once 'db-config.php';
 
+// Generate CSRF token for the login form
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate CSRF token
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $token)) {
+        http_response_code(403);
+        die("Invalid CSRF token.");
+    }
+
     $user = trim($_POST['user']);
     $pass = trim($_POST['pass']);
 
-    // FIX: Use prepared statement to prevent SQL injection
     $stmt = $conn->prepare("SELECT * FROM USER WHERE userName = ?");
     $stmt->bind_param("s", $user);
     $stmt->execute();
@@ -16,22 +27,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-
-        // FIX: Removed debug echo statements that exposed password hashes
-        // Validate the hashed password
         if (password_verify($pass, $row['password'])) {
             $_SESSION['userId']    = $row['userId'];
             $_SESSION['userName']  = $row['userName'];
             $_SESSION['role']      = $row['role'];
             $_SESSION['firstName'] = $row['firstName'];
-
             header("Location: card-list.php");
             exit();
         } else {
             $error = "Invalid username or password.";
         }
     } else {
-        // FIX: Same error message for not found vs wrong password (prevents user enumeration)
         $error = "Invalid username or password.";
     }
 }
@@ -55,6 +61,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php if($error != "") echo "<p style='color:red; font-weight:bold;'>" . htmlspecialchars($error) . "</p>"; ?>
 
         <form action="login.php" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+
             <div class="form-group">
                 <label>Username:</label>
                 <input type="text" name="user" required>

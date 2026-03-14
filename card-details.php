@@ -1,9 +1,7 @@
 <?php
-// Authorization: Ensure user is logged in
 require_once 'auth.php';
 require_once 'db-config.php';
 
-// FIX: Cast to int and use prepared statement to prevent SQL injection
 if (isset($_GET['id'])) {
     $cardId = (int)$_GET['id'];
     $stmt = $conn->prepare("SELECT * FROM GIFTCARD WHERE cardId = ?");
@@ -45,14 +43,24 @@ if (isset($_GET['id'])) {
 
             <div class="workflow-actions">
                 <?php if (isAdmin()): ?>
-                    <!-- ADMIN VIEW: Show Management Buttons -->
+                    <!-- ADMIN VIEW -->
                     <a href="card-update.php?id=<?php echo $card['cardId']; ?>" class="button-link">Update Card Details</a>
-                    <a href="card-delete.php?id=<?php echo $card['cardId']; ?>" class="delete-link" onclick="return confirm('Are you sure you want to delete this card?')">Delete This Card</a>
-                <?php else: ?>
-                    <!-- CUSTOMER VIEW: Show Redemption Button -->
-                    <form action="redeem.php" method="POST" style="display:inline;">
+
+                    <!-- FIX: Delete is now a POST form with CSRF token (no longer a plain GET link) -->
+                    <form action="card-delete.php" method="POST" style="display:inline;"
+                          onsubmit="return confirm('Are you sure you want to delete this card?')">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
                         <input type="hidden" name="cardId" value="<?php echo $card['cardId']; ?>">
-                        <button type="submit" class="button-link" style="background-color: #28a745; border:none;" onclick="return confirm('Redeem <?php echo number_format($card['points']); ?> points for this card?')">
+                        <button type="submit" class="delete-link" style="cursor:pointer;">Delete This Card</button>
+                    </form>
+
+                <?php else: ?>
+                    <!-- CUSTOMER VIEW -->
+                    <form action="redeem.php" method="POST" style="display:inline;"
+                          onsubmit="return confirm('Redeem <?php echo number_format($card['points']); ?> points for this card?')">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
+                        <input type="hidden" name="cardId" value="<?php echo $card['cardId']; ?>">
+                        <button type="submit" class="button-link" style="background-color: #28a745; border:none;">
                             Redeem Now
                         </button>
                     </form>
