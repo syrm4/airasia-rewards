@@ -1,9 +1,7 @@
 <?php
-require_once 'auth.php';
+require_once 'auth.php'; // db-config.php included internally by auth.php
 restrictToAdmin();
-require_once 'db-config.php';
 
-// FIX CWE-20: Define allowlist for account types
 $allowedAccountTypes = ['Corporate', 'Gold', 'Silver'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -16,19 +14,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $type = trim($_POST['accountType']);
     $pts  = (int)$_POST['points'];
 
-    // FIX CWE-20: Validate accountType against allowlist
     if (!in_array($type, $allowedAccountTypes, true)) {
         $inputError = "Invalid account type selected.";
-    }
-    // FIX CWE-20: Validate starting points is non-negative
-    elseif ($pts < 0) {
+    } elseif ($pts < 0) {
         $inputError = "Starting points cannot be negative.";
-    }
-    // FIX CWE-20: Validate required text fields are not empty
-    elseif (empty($un) || empty($fn) || empty($ln)) {
+    } elseif (empty($un) || empty($fn) || empty($ln)) {
         $inputError = "First name, last name, and username are all required.";
-    }
-    else {
+    } else {
         $hashedPw = password_hash($pw, PASSWORD_DEFAULT);
 
         $stmt = $conn->prepare("INSERT INTO USER (userName, password, firstName, lastName, role) VALUES (?, ?, ?, ?, 'Customer')");
@@ -69,13 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h1>Enroll New Customer</h1>
         <p>Logged in as: <?php echo htmlspecialchars($_SESSION['userName']); ?> (Admin)</p>
 
-        <?php if (!empty($inputError)): ?>
-            <p style="color:red; font-weight:bold;"><?php echo htmlspecialchars($inputError); ?></p>
-        <?php endif; ?>
-
-        <?php if (!empty($dbError)): ?>
-            <p style="color:red; font-weight:bold;"><?php echo htmlspecialchars($dbError); ?></p>
-        <?php endif; ?>
+        <?php renderFormErrors($inputError ?? null, $dbError ?? null); ?>
 
         <form action="cust-add.php" method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
@@ -99,7 +85,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="password" name="password" required>
             </div>
 
-            <!-- FIX CWE-20: Replaced free-text input with allowlisted dropdown -->
             <div class="form-group">
                 <label>Account Type:</label>
                 <select name="accountType" required>
@@ -114,7 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="form-group"><label>Starting Points:</label>
-                <!-- FIX CWE-20: min="0" enforces non-negative on front end -->
                 <input type="number" name="points" min="0"
                        value="<?php echo htmlspecialchars($_POST['points'] ?? '0'); ?>"
                        required>

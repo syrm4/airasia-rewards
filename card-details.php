@@ -1,6 +1,5 @@
 <?php
-require_once 'auth.php';
-require_once 'db-config.php';
+require_once 'auth.php'; // db-config.php included internally by auth.php
 
 if (isset($_GET['id'])) {
     $cardId = (int)$_GET['id'];
@@ -46,7 +45,6 @@ if (isset($_GET['id'])) {
                     <!-- ADMIN VIEW -->
                     <a href="card-update.php?id=<?php echo $card['cardId']; ?>" class="button-link">Update Card Details</a>
 
-                    <!-- FIX: Delete is now a POST form with CSRF token (no longer a plain GET link) -->
                     <form action="card-delete.php" method="POST" style="display:inline;"
                           onsubmit="return confirm('Are you sure you want to delete this card?')">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">

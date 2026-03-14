@@ -1,10 +1,6 @@
 <?php
-require_once 'auth.php';
+require_once 'auth.php'; // db-config.php and $allowedCardTypes included internally
 restrictToAdmin();
-require_once 'db-config.php';
-
-// FIX CWE-20: Define allowlists for validated fields
-$allowedCardTypes = ['Travel', 'Service', 'Food', 'Shopping', 'Lifestyle'];
 
 if (isset($_GET['id'])) {
     $cardId = (int)$_GET['id'];
@@ -32,23 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $value  = (float)$_POST['cardValue'];
     $points = (int)$_POST['points'];
 
-    // FIX CWE-20: Validate cardType against allowlist
-    if (!in_array($type, $allowedCardTypes, true)) {
-        $inputError = "Invalid card type selected.";
-    }
-    // FIX CWE-20: Validate cardValue is a positive number
-    elseif ($value <= 0) {
-        $inputError = "Card value must be greater than zero.";
-    }
-    // FIX CWE-20: Validate points is a non-negative integer
-    elseif ($points < 0) {
-        $inputError = "Required points cannot be negative.";
-    }
-    // FIX CWE-20: Validate cardName is not empty
-    elseif (empty($name)) {
-        $inputError = "Card name cannot be empty.";
-    }
-    else {
+    $inputError = validateCardInput($name, $type, $value, $points);
+
+    if (!$inputError) {
         $stmt = $conn->prepare("UPDATE GIFTCARD SET cardName=?, cardType=?, cardValue=?, points=? WHERE cardId=?");
         $stmt->bind_param("ssdii", $name, $type, $value, $points, $id);
 
@@ -80,13 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <main>
         <h1>Update Gift Card Details</h1>
 
-        <?php if (!empty($inputError)): ?>
-            <p style="color:red; font-weight:bold;"><?php echo htmlspecialchars($inputError); ?></p>
-        <?php endif; ?>
-
-        <?php if (!empty($dbError)): ?>
-            <p style="color:red; font-weight:bold;"><?php echo htmlspecialchars($dbError); ?></p>
-        <?php endif; ?>
+        <?php renderFormErrors($inputError ?? null, $dbError ?? null); ?>
 
         <form action="card-update.php?id=<?php echo $card['cardId']; ?>" method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
@@ -99,7 +75,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                        required>
             </div>
 
-            <!-- FIX CWE-20: Replaced free-text input with allowlisted dropdown -->
             <div class="form-group">
                 <label>Card Type:</label>
                 <select name="cardType" required>
@@ -116,7 +91,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="form-group">
                 <label>Card Value ($):</label>
-                <!-- FIX CWE-20: min="0.01" enforces positive value on front end -->
                 <input type="number" name="cardValue" step="0.01" min="0.01"
                        value="<?php echo htmlspecialchars($_POST['cardValue'] ?? $card['cardValue']); ?>"
                        required>
@@ -124,7 +98,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="form-group">
                 <label>Required Points:</label>
-                <!-- FIX CWE-20: min="0" enforces non-negative on front end -->
                 <input type="number" name="points" min="0"
                        value="<?php echo htmlspecialchars($_POST['points'] ?? $card['points']); ?>"
                        required>

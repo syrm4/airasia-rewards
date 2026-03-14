@@ -1,6 +1,5 @@
 <?php
-require_once 'auth.php';
-require_once 'db-config.php';
+require_once 'auth.php'; // db-config.php included internally by auth.php
 
 // Fetch User's Points
 $uId = (int)$_SESSION['userId'];
@@ -13,7 +12,6 @@ $account = $acc_res->fetch_assoc();
 // Fetch Gift Cards
 $result = $conn->query("SELECT * FROM GIFTCARD");
 
-// FIX A01: Read flash message from session instead of GET parameter
 $flash = getFlash();
 ?>
 
@@ -44,7 +42,6 @@ $flash = getFlash();
             </p>
         <?php endif; ?>
 
-        <!-- Authorization: Only Admin sees these buttons -->
         <?php if (isAdmin()): ?>
             <div class="top-nav">
                 <a href="card-add.php" class="button-link">+ Add New Gift Card</a>

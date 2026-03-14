@@ -47,7 +47,6 @@ function isAdmin() {
 // Redirect Customer if they try to access Admin pages
 function restrictToAdmin() {
     if (!isAdmin()) {
-        // FIX A01: Use session flash instead of GET parameter
         setFlash('Unauthorized Access.', 'error');
         header("Location: card-list.php");
         exit();
@@ -77,10 +76,7 @@ function requireCsrf() {
     }
 }
 
-// FIX A09: Audit logging helper - call after db-config.php has been included
-// $conn   : active MySQLi connection
-// $action : event name e.g. LOGIN_SUCCESS, CARD_DELETE
-// $detail : optional context e.g. "cardId=5"
+// FIX A09: Audit logging helper
 function logAction($conn, $action, $detail = null) {
     $userId   = $_SESSION['userId']   ?? null;
     $username = $_SESSION['userName'] ?? null;
@@ -93,13 +89,11 @@ function logAction($conn, $action, $detail = null) {
 }
 
 // FIX A01: Session-based flash message helpers
-// Stores a one-time message in the session to be shown after a redirect
 function setFlash($message, $type = 'error') {
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_type']    = $type;
 }
 
-// Reads and immediately clears the flash message so it only shows once
 function getFlash() {
     if (!empty($_SESSION['flash_message'])) {
         $flash = [
@@ -110,5 +104,39 @@ function getFlash() {
         return $flash;
     }
     return null;
+}
+
+// Centralised allowlist for gift card types (Redundancy 3)
+// Used by card-add.php and card-update.php for validation and dropdown rendering
+$allowedCardTypes = ['Travel', 'Service', 'Food', 'Shopping', 'Lifestyle'];
+
+// Centralised gift card input validation (Redundancy 4)
+// Returns an error string if validation fails, or null if all inputs are valid
+function validateCardInput($name, $type, $value, $points) {
+    global $allowedCardTypes;
+    if (!in_array($type, $allowedCardTypes, true)) {
+        return "Invalid card type selected.";
+    }
+    if ($value <= 0) {
+        return "Card value must be greater than zero.";
+    }
+    if ($points < 0) {
+        return "Required points cannot be negative.";
+    }
+    if (empty($name)) {
+        return "Card name cannot be empty.";
+    }
+    return null;
+}
+
+// Centralised inline error display helper (Redundancy 5)
+// Outputs validation and DB error messages for admin forms
+function renderFormErrors($inputError = null, $dbError = null) {
+    if (!empty($inputError)) {
+        echo "<p style='color:red; font-weight:bold;'>" . htmlspecialchars($inputError) . "</p>";
+    }
+    if (!empty($dbError)) {
+        echo "<p style='color:red; font-weight:bold;'>" . htmlspecialchars($dbError) . "</p>";
+    }
 }
 ?>

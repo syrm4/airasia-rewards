@@ -1,6 +1,5 @@
 <?php
-require_once 'auth.php';
-require_once 'db-config.php';
+require_once 'auth.php'; // db-config.php included internally by auth.php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
     requireCsrf();
@@ -51,14 +50,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cardId'])) {
 
         $conn->commit();
 
-        // FIX A01: Use session flash for success message
         setFlash('Success! You redeemed ' . $card['cardName'] . '.', 'success');
         header("Location: card-list.php");
         exit();
 
     } catch (Exception $e) {
         $conn->rollback();
-        // FIX A01: Use session flash for error message
         setFlash($e->getMessage(), 'error');
         header("Location: card-list.php");
         exit();
