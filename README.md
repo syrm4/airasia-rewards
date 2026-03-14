@@ -157,5 +157,9 @@ This project was assessed against the [OWASP Top 10](https://owasp.org/www-proje
 | 2026-03-14 | Added `AUDIT_LOG` table and `logAction()` helper; logging all security-relevant events | A09 |
 | 2026-03-14 | Replaced GET-based `?error=` flash messages with session-based `setFlash()` / `getFlash()` | A01 |
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Author
 syrm4
